@@ -32,7 +32,7 @@ class PylertsBot(commands.Bot):
         roles_to_add = set()
         roles_to_remove = set()
 
-        # Gather targets from matching rules
+        # gather targets from matching rules
         for rule in self.cfg.rules:
             if rule.currency and rule.currency.upper() != donation_currency:
                 continue
@@ -43,7 +43,7 @@ class PylertsBot(commands.Bot):
                 for role_id in rule.exclude_role_ids:
                     roles_to_remove.add(role_id)
 
-        # Exclusion takes priority
+        # exclusion takes priority
         roles_to_add = roles_to_add - roles_to_remove
 
         if not roles_to_add and not roles_to_remove:
@@ -73,7 +73,7 @@ class PylertsBot(commands.Bot):
             log("pylerts", f"user {name} not found on server")
             return
 
-        # 1. Grant roles
+        # grant roles
         for role_id in roles_to_add:
             role = guild.get_role(role_id)
             if not role:
@@ -90,7 +90,7 @@ class PylertsBot(commands.Bot):
             except Exception as e:
                 log("pylerts", f"error giving role {role_id} to {name}: {e}")
 
-        # 2. Remove excluded roles
+        # remove excluded roles
         for role_id in roles_to_remove:
             role = guild.get_role(role_id)
             if not role:

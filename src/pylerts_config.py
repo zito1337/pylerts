@@ -38,14 +38,14 @@ class Config:
             raw_rules = data.get("rules", [])
             rules = []
             for r in raw_rules:
-                # Чтение ролей для выдачи
+                # read role ids
                 role_ids = r.get("role_ids", [])
                 if isinstance(role_ids, int):
                     role_ids = [role_ids]
                 elif not isinstance(role_ids, list):
                     role_ids = []
 
-                # Чтение ролей для удаления
+                # read exclude role ids
                 exclude_role_ids = r.get("exclude_role_ids", [])
                 if isinstance(exclude_role_ids, int):
                     exclude_role_ids = [exclude_role_ids]
