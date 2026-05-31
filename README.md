@@ -28,6 +28,17 @@
 * **Multiple role support!** One rule can give a user multiple Discord roles at once.
 * **Tier system!** Automatic removal of old roles when a user reaches a higher level (e.g., replacing *tier 1* with *tier 2* on a large donation).
 
+## 🗺️ Roadmap
+
+Here are the planned features for the upcoming releases of <span style="color:#FFD43B; font-weight:bold;">py</span><span style="color:#FF6600; font-weight:bold;">lerts</span>:
+
+- **Cumulative Donation System (CDS)**
+  * Add a lightweight SQLite database to track and sum up donations over time, allowing users to unlock roles progressively
+- **Discord embeds and public logs**
+  * Send beautiful public thank-you cards to a dedicated channel and set up admin logs to track role grant events
+- **Dockerization**
+  * Provide a `Dockerfile` and `docker-compose.yml` to enable one-command deployment on any Linux VPS/server
+
 ---
 
 <p align="center">
