@@ -18,12 +18,39 @@ class PylertsBot(commands.Bot):
     async def grant_role(self, name: str, amount: str, currency: str):
         guild = self.get_guild(self.cfg.guild_id)
         if not guild:
-            log("pylerts", f"sever with id {self.cfg.guild_id} not found")
+            log("pylerts", f"server with id {self.cfg.guild_id} not found")
             return
 
-        role = guild.get_role(self.cfg.role_id)
-        if not role:
-            log("pylerts", f"role {self.cfg.role_id} not found on server")
+        try:
+            donation_amount = float(amount)
+        except ValueError:
+            log("pylerts", f"invalid donation amount format: {amount}")
+            return
+
+        donation_currency = str(currency).upper()
+
+        roles_to_add = set()
+        roles_to_remove = set()
+
+        # Gather targets from matching rules
+        for rule in self.cfg.rules:
+            if rule.currency and rule.currency.upper() != donation_currency:
+                continue
+
+            if donation_amount >= rule.min_amount:
+                for role_id in rule.role_ids:
+                    roles_to_add.add(role_id)
+                for role_id in rule.exclude_role_ids:
+                    roles_to_remove.add(role_id)
+
+        # Exclusion takes priority
+        roles_to_add = roles_to_add - roles_to_remove
+
+        if not roles_to_add and not roles_to_remove:
+            log(
+                "pylerts",
+                f"{name} donated {amount} {currency}, but no matching actions found",
+            )
             return
 
         search_name = str(name).lower()
@@ -31,7 +58,10 @@ class PylertsBot(commands.Bot):
 
         # search for member
         for member in guild.members:
-            member_names = [str(member.name).lower(), str(member.display_name).lower()]
+            member_names = [
+                str(member.name).lower(),
+                str(member.display_name).lower(),
+            ]
             if hasattr(member, "global_name") and member.global_name:
                 member_names.append(str(member.global_name).lower())
 
@@ -39,15 +69,36 @@ class PylertsBot(commands.Bot):
                 target_member = member
                 break
 
-        if target_member:
+        if not target_member:
+            log("pylerts", f"user {name} not found on server")
+            return
+
+        # 1. Grant roles
+        for role_id in roles_to_add:
+            role = guild.get_role(role_id)
+            if not role:
+                log("pylerts", f"role {role_id} not found on server")
+                continue
+
             if role in target_member.roles:
-                log("pylerts", f"{name} already has a role")
-                return
+                log("pylerts", f"{name} already has role {role.name} ({role_id})")
+                continue
 
             try:
                 await target_member.add_roles(role)
-                log("pylerts", f"given role to {name}")
+                log("pylerts", f"given role {role.name} ({role_id}) to {name}")
             except Exception as e:
-                log("pylerts", f"error giving role to {name}: {e}")
-        else:
-            log("pylerts", f"user {name} not found on server")
+                log("pylerts", f"error giving role {role_id} to {name}: {e}")
+
+        # 2. Remove excluded roles
+        for role_id in roles_to_remove:
+            role = guild.get_role(role_id)
+            if not role:
+                continue
+
+            if role in target_member.roles:
+                try:
+                    await target_member.remove_roles(role)
+                    log("pylerts", f"removed role {role.name} ({role_id}) from {name}")
+                except Exception as e:
+                    log("pylerts", f"error removing role {role_id} from {name}: {e}")
